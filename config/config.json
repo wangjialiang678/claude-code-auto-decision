@@ -1,0 +1,18 @@
+{
+  "version": "1.0",
+  "learning": {
+    "enabled": true,
+    "threshold": 3,
+    "confidence_min": 0.8
+  },
+  "llm": {
+    "enabled": false,
+    "provider": "claude",
+    "model": "haiku",
+    "timeout": 30
+  },
+  "session_review": {
+    "enabled": true,
+    "min_actions": 5
+  }
+}

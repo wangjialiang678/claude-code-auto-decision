@@ -1,0 +1,12 @@
+# Runtime files
+hooks/.experience_counter
+__pycache__/
+*.pyc
+
+# User data (don't commit personal rules/feedback)
+.claude/memory-bank/feedback/
+.claude/memory-bank/sessions/
+.claude/memory-bank/learned-rules.md
+
+# OS files
+.DS_Store
