@@ -3,9 +3,10 @@
 # Claude Code Auto-Decision System Installer
 #
 # Usage:
-#   ./install.sh          # Install (symlink mode, auto-sync on git pull)
-#   ./install.sh --copy   # Install (copy mode, manual update needed)
-#   ./install.sh --uninstall  # Remove installation
+#   ./install.sh                    # Install (symlink mode)
+#   ./install.sh --copy             # Install (copy mode)
+#   ./install.sh --with-updater     # Install with auto-update reminder
+#   ./install.sh --uninstall        # Remove installation
 #
 
 set -e
@@ -187,15 +188,36 @@ uninstall() {
     log_info "Uninstall complete."
 }
 
+# Record installed version
+record_version() {
+    local version_file="$CLAUDE_HOME/auto-decision/.installed-version"
+    mkdir -p "$(dirname "$version_file")"
+    if [ -f "$SCRIPT_DIR/.git/HEAD" ]; then
+        git -C "$SCRIPT_DIR" rev-parse --short HEAD 2>/dev/null > "$version_file" || echo "unknown" > "$version_file"
+    else
+        echo "unknown" > "$version_file"
+    fi
+    log_info "Version recorded: $(cat "$version_file")"
+}
+
 # Main
 case "${1:-}" in
     --copy)
         install_copy
+        record_version
+        ;;
+    --with-updater)
+        install_symlink
+        record_version
+        log_info "Update checker enabled. You'll be reminded when updates are available."
+        log_info "To manually check: ./update.sh --check"
+        log_info "To update: git pull && ./update.sh"
         ;;
     --uninstall)
         uninstall
         ;;
     *)
         install_symlink
+        record_version
         ;;
 esac
