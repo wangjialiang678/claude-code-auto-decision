@@ -53,12 +53,14 @@ def load_rules() -> list[dict]:
                     if rule.get("action") != prior.get("action"):
                         log(
                             "Rules",
-                            f"规则冲突: {prior.get('id')}({prior.get('source')}) vs "
+                            f"规则冲突(已忽略低优先级): {prior.get('id')}({prior.get('source')}) vs "
                             f"{rule.get('id')}({source})",
                         )
+                    # 跳过冲突的低优先级规则，不添加到列表
+                    continue
                 else:
                     seen[key] = rule
-            rules.extend(parsed)
+                    rules.append(rule)
 
     return rules
 

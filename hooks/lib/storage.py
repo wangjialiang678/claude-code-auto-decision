@@ -107,7 +107,7 @@ def get_recent_feedback(days: int = 7) -> list[dict]:
     today = datetime.now()
 
     for i in range(days):
-        date = today - __import__("datetime").timedelta(days=i)
+        date = today - timedelta(days=i)
         date_str = date.strftime("%Y-%m-%d")
         log_file = feedback_dir / f"{date_str}.jsonl"
 

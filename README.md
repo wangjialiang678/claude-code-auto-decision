@@ -173,12 +173,20 @@ Hook 通过 stdout 输出 JSON 控制 Claude Code 行为：
 
 ### 规则优先级
 
+**文件间优先级**（从高到低）：
+
 | 优先级 | 文件位置 | 说明 |
 |--------|---------|------|
 | 1（最高） | 项目 `learned-rules.md` | 项目学习规则 |
 | 2 | 项目 `rules.md` | 项目手动规则 |
 | 3 | 全局 `learned-rules.md` | 全局学习规则 |
 | 4（最低） | 全局 `rules.md` | 全局手动规则 |
+
+**文件内规则顺序**：
+- 在同一文件内，**规则定义顺序决定匹配顺序**
+- 建议将 `deny` 规则放在前面，`allow` 规则放在后面
+- 特定规则（带 `pattern` 或 `path`）应在通用规则之前
+- 示例：`deny .env 文件` 应在 `allow Write` 之前
 
 ## 反馈日志格式（JSONL）
 
@@ -363,9 +371,10 @@ if 连续 N 次相同选择 and 置信度 > 阈值:
 ### 允许（allow）
 
 - `Read`, `Glob`, `Grep` - 读取和搜索操作
+- `Write`, `Edit`, `NotebookEdit` - 编辑操作
 - `WebSearch`, `WebFetch` - 网络搜索
-- `TodoWrite`, `AskUserQuestion` - 辅助工具
-- `Bash`: `ls`, `pwd`, `cat`, `head`, `tail` 等只读命令
+- `TodoWrite`, `AskUserQuestion`, `Task`, `Skill` - 辅助工具
+- `Bash`: `ls`, `pwd`, `cat`, `head`, `tail`, `grep`, `find`, `awk`, `sed` 等只读命令
 - `Bash`: `git status`, `git log`, `git diff` 等 Git 只读命令
 - `Bash`: `npm test`, `pytest`, `go test` 等测试命令
 
@@ -473,9 +482,12 @@ if 连续 N 次相同选择 and 置信度 > 阈值:
 
 **注意**：删除、改名、安装依赖等操作都是通过 `Bash` 工具执行的。
 
-### 规则冲突提示
+### 规则冲突处理
 
-当出现同一 `tool + pattern/path` 但 `action` 不一致的规则时，会在 `~/.claude/auto-decision/hooks.log` 中记录冲突信息，便于排查覆盖关系。
+当出现同一 `tool + pattern/path` 但 `action` 不一致的规则时：
+- 系统会自动保留高优先级规则，忽略低优先级的冲突规则
+- 在 `~/.claude/auto-decision/hooks.log` 中记录冲突信息，便于排查
+- 日志格式：`规则冲突(已忽略低优先级): rule1(source1) vs rule2(source2)`
 
 ### 用户选择推断
 
@@ -493,3 +505,4 @@ PostToolUse 只有执行成功才触发 → executed = true = 用户批准
 2. **调整学习灵敏度**：修改 `config.json` 的 `threshold` 和 `confidence_min`
 3. **项目特定规则**：在项目的 `.claude/memory-bank/rules.md` 中定义
 4. **禁用学习**：设置 `learning.enabled: false`
+5. **自动化测试**：基于 `docs/test-cases.md` 中的测试用例编写自动化脚本

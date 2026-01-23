@@ -17,6 +17,20 @@
   action: allow
   reason: 搜索内容安全
 
+## 文件保护（优先级最高）
+
+### deny-env-files
+- tool: Write|Edit
+  action: deny
+  path: "**/.env*"
+  reason: 保护环境变量文件
+
+### deny-credentials
+- tool: Write|Edit
+  action: deny
+  path: "**/credentials*"
+  reason: 保护凭证文件
+
 ## 编辑类（允许）
 
 ### allow-write
@@ -48,12 +62,26 @@
 
 ## Bash 命令
 
+### 危险命令（拒绝 - 优先级高）
+
+### deny-dangerous-rm
+- tool: Bash
+  action: deny
+  pattern: rm\s+-rf\s+[/~]
+  reason: 危险：可能删除重要目录
+
+### deny-fork-bomb
+- tool: Bash
+  action: deny
+  pattern: :\(\)\s*\{\s*:\|:&\s*\}\s*;:
+  reason: 危险：Fork bomb
+
 ### 只读命令（允许）
 
 ### allow-readonly-bash
 - tool: Bash
   action: allow
-  pattern: ^(ls|pwd|cat|head|tail|wc|which|echo|date|whoami)\b
+  pattern: ^(ls|pwd|cat|head|tail|wc|which|echo|date|whoami|grep|find|awk|sed)\b
   reason: 只读命令
 
 ### allow-git-readonly
@@ -70,35 +98,7 @@
   pattern: ^(npm test|npm run test|npm run lint|npm run check|pytest|go test|cargo test|bun test)
   reason: 测试和检查命令
 
-### 危险命令（拒绝）
-
-### deny-dangerous-rm
-- tool: Bash
-  action: deny
-  pattern: rm\s+-rf\s+[/~]
-  reason: 危险：可能删除重要目录
-
-### deny-fork-bomb
-- tool: Bash
-  action: deny
-  pattern: :\(\)\s*\{\s*:\|:&\s*\}\s*;:
-  reason: 危险：Fork bomb
-
-## 文件保护
-
-### deny-env-files
-- tool: Write|Edit
-  action: deny
-  path: "**/.env*"
-  reason: 保护环境变量文件
-
-### deny-credentials
-- tool: Write|Edit
-  action: deny
-  path: "**/credentials*"
-  reason: 保护凭证文件
-
-## 其他
+## 其他辅助工具
 
 ### allow-todo
 - tool: TodoWrite
