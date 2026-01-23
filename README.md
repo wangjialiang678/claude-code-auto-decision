@@ -203,6 +203,10 @@ Hook 通过 stdout 输出 JSON 控制 Claude Code 行为：
 
 **推断用户选择**：`auto_decision=ask` 且 `executed=true` 表示用户点了 Yes。
 
+### 反馈更新策略
+
+- `PostToolUse` 更新 `executed` 时会回溯最近 7 天的日志文件，避免跨天或时区导致匹配失败。
+
 ## 学习机制
 
 ### 模式检测算法
@@ -445,6 +449,10 @@ if 连续 N 次相同选择 and 置信度 > 阈值:
 | 会话总结 | `.claude/memory-bank/sessions/{session-id}.md` |
 | 待确认全局规则 | `~/.claude/auto-decision/pending_global_rules.json` |
 
+## 测试用例
+
+手动测试用例见 `docs/test-cases.md`。
+
 ## 技术细节
 
 ### Claude Code 工具列表
@@ -464,6 +472,10 @@ if 连续 N 次相同选择 and 置信度 > 阈值:
 | 写待办 | TodoWrite |
 
 **注意**：删除、改名、安装依赖等操作都是通过 `Bash` 工具执行的。
+
+### 规则冲突提示
+
+当出现同一 `tool + pattern/path` 但 `action` 不一致的规则时，会在 `~/.claude/auto-decision/hooks.log` 中记录冲突信息，便于排查覆盖关系。
 
 ### 用户选择推断
 

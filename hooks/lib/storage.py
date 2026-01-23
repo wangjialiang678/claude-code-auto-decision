@@ -5,7 +5,7 @@ storage.py - 数据读写
 """
 
 import json
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Optional
 from . import MEMORY_BANK_PROJECT, MEMORY_BANK_GLOBAL, CONFIG_FILE
@@ -63,30 +63,38 @@ def log_request(
         f.write(json.dumps(entry, ensure_ascii=False) + "\n")
 
 
-def update_request_executed(request_id: str, executed: bool = True):
+def update_request_executed(request_id: str, executed: bool = True, search_days: int = 7) -> bool:
     """
     更新请求的执行状态
 
     在 PostToolUse 中调用，标记请求已执行（用户批准了）
     """
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    log_file = MEMORY_BANK_PROJECT / "feedback" / f"{date_str}.jsonl"
+    for i in range(search_days):
+        date = datetime.now() - timedelta(days=i)
+        date_str = date.strftime("%Y-%m-%d")
+        log_file = MEMORY_BANK_PROJECT / "feedback" / f"{date_str}.jsonl"
 
-    if not log_file.exists():
-        return
+        if not log_file.exists():
+            continue
 
-    # 读取所有行，更新匹配的请求
-    lines = log_file.read_text().strip().split("\n")
-    updated_lines = []
+        # 读取所有行，更新匹配的请求
+        lines = log_file.read_text().strip().split("\n")
+        updated_lines = []
+        updated = False
 
-    for line in lines:
-        if line:
-            entry = json.loads(line)
-            if entry.get("id") == request_id:
-                entry["executed"] = executed
-            updated_lines.append(json.dumps(entry, ensure_ascii=False))
+        for line in lines:
+            if line:
+                entry = json.loads(line)
+                if entry.get("id") == request_id:
+                    entry["executed"] = executed
+                    updated = True
+                updated_lines.append(json.dumps(entry, ensure_ascii=False))
 
-    log_file.write_text("\n".join(updated_lines) + "\n")
+        if updated:
+            log_file.write_text("\n".join(updated_lines) + "\n")
+            return True
+
+    return False
 
 
 def get_recent_feedback(days: int = 7) -> list[dict]:

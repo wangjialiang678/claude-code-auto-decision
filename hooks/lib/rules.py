@@ -19,6 +19,7 @@ from . import (
     RULES_GLOBAL,
     RULES_PROJECT,
 )
+from .logger import log
 
 
 def load_rules() -> list[dict]:
@@ -39,14 +40,36 @@ def load_rules() -> list[dict]:
         (RULES_GLOBAL, "global-base"),
     ]
 
+    seen = {}
+
     for file_path, source in rule_files:
         if file_path.exists():
             parsed = parse_rules_md(file_path.read_text())
             for rule in parsed:
                 rule["source"] = source
+                key = _rule_key(rule)
+                if key in seen:
+                    prior = seen[key]
+                    if rule.get("action") != prior.get("action"):
+                        log(
+                            "Rules",
+                            f"规则冲突: {prior.get('id')}({prior.get('source')}) vs "
+                            f"{rule.get('id')}({source})",
+                        )
+                else:
+                    seen[key] = rule
             rules.extend(parsed)
 
     return rules
+
+
+def _rule_key(rule: dict) -> tuple[str, str, str]:
+    """生成规则去重/冲突检查的 key"""
+    return (
+        rule.get("tool", ""),
+        rule.get("pattern", ""),
+        rule.get("path", ""),
+    )
 
 
 def parse_rules_md(content: str) -> list[dict]:

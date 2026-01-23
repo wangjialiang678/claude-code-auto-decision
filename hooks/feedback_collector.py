@@ -24,8 +24,11 @@ def main():
     tool_use_id = data.get("tool_use_id", "")
 
     if tool_use_id:
-        update_request_executed(tool_use_id, executed=True)
-        log("PostToolUse", f"{tool_name} 已执行")
+        updated = update_request_executed(tool_use_id, executed=True)
+        if updated:
+            log("PostToolUse", f"{tool_name} 已执行")
+        else:
+            log("PostToolUse", f"未找到记录: {tool_name} {tool_use_id}")
 
 
 if __name__ == "__main__":
